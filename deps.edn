@@ -1,0 +1,6 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.0"}
+        cljfx/cljfx {:mvn/version "1.9.2"}
+        org.openjfx/javafx-controls {:mvn/version "21.0.2"}
+        org.openjfx/javafx-graphics {:mvn/version "21.0.2"}}
+ :aliases {:run {:main-opts ["-m" "biomorph.core"]}}}
