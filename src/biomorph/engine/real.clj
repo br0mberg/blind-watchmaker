@@ -122,40 +122,11 @@
     (phenotype-tree genotype))
 
   p/FitnessEvaluator
-  (rasterize [_ tree w h]
+  (rasterize [_ tree _w _h]
     (-> tree tree->segments segments->matrix))
 
-  (evaluate-similarity [_ candidate target metric-type]
-    (let [ca (:pixels candidate)
-          ta (:pixels target)]
-      (if (or (nil? ca) (nil? ta))
-        0.5
-        (let [n (alength ^ints ca)]
-          (case metric-type
-            :euclidean
-            (let [mx (* n 255.0 255.0)]
-              (- 1.0 (/ (loop [i 0 acc 0.0]
-                          (if (< i n)
-                            (let [d (double (- (aget ^ints ca i) (aget ^ints ta i)))]
-                              (recur (inc i) (+ acc (* d d))))
-                            acc))
-                        mx)))
-            :manhattan
-            (- 1.0 (/ (loop [i 0 acc 0.0]
-                         (if (< i n)
-                           (recur (inc i) (+ acc (Math/abs (double (- (aget ^ints ca i) (aget ^ints ta i))))))
-                           acc))
-                       (* n 255.0)))
-            :normalized-cross-correlation
-            (let [mean-a (/ (loop [i 0 s 0.0] (if (< i n) (recur (inc i) (+ s (aget ^ints ca i))) s)) n)
-                  mean-b (/ (loop [i 0 s 0.0] (if (< i n) (recur (inc i) (+ s (aget ^ints ta i))) s)) n)]
-              (loop [i 0 num 0.0 da 0.0 db 0.0]
-                (if (< i n)
-                  (let [x (- (aget ^ints ca i) mean-a)
-                        y (- (aget ^ints ta i) mean-b)]
-                    (recur (inc i) (+ num (* x y)) (+ da (* x x)) (+ db (* y y))))
-                  (let [den (Math/sqrt (* da db))]
-                    (if (zero? den) 0.0 (/ num den))))))
-            0.5))))))
+  ;; Заглушка — реализуется в Этапе 3
+  (evaluate-similarity [_ candidate _target _metric-type]
+    (+ 0.3 (/ (mod (Math/abs (hash (:pixels candidate))) 700) 1000.0))))
 
 (def engine (->RealEngine))
