@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Rorschach / Psychiatric Ward
+   ═══════════════════════════════════════════════════════════════════ */
+
+.root {
+    -fx-font-family: "Courier New";
+    -fx-font-size: 13px;
+    -fx-background-color: #060606;
+}
+
+/* ── ScrollPane ─────────────────────────────────────────────────── */
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.scroll-pane > .scroll-bar:vertical {
+    -fx-background-color: #0A0A0A;
+    -fx-pref-width: 5px;
+}
+
+.scroll-pane > .scroll-bar:vertical .thumb {
+    -fx-background-color: #242424;
+    -fx-background-radius: 0;
+}
+.scroll-pane > .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #8B1A1A;
+}
+
+.scroll-pane > .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane > .scroll-bar:vertical .increment-button,
+.scroll-pane > .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+    -fx-padding: 0;
+}
+
+/* ── Separator ─────────────────────────────────────────────────── */
+.separator > .line {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #1A1A1A;
+}
+
+/* ── CheckBox ──────────────────────────────────────────────────── */
+.check-box {
+    -fx-font-family: "Courier New";
+    -fx-font-size: 10px;
+    -fx-text-fill: #555555;
+}
+
+.check-box .box {
+    -fx-background-color: #111111;
+    -fx-border-color: #333333;
+    -fx-border-width: 1px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.check-box:hover .box {
+    -fx-border-color: #8B1A1A;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #B03030;
+}
+
+.check-box:selected {
+    -fx-text-fill: #888888;
+}
+
+/* ── Button ────────────────────────────────────────────────────── */
+.button {
+    -fx-font-family: "Courier New";
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-cursor: hand;
+}
+
+.button:focused {
+    -fx-border-color: #8B1A1A;
+    -fx-border-width: 1px;
+}
+
+/* ── ComboBox ──────────────────────────────────────────────────── */
+.combo-box {
+    -fx-background-color: #111111;
+    -fx-border-color: #2A2A2A;
+    -fx-text-fill: #888888;
+    -fx-font-family: "Courier New";
+    -fx-font-size: 10px;
+    -fx-background-radius: 0;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: #111111;
+    -fx-text-fill: #888888;
+    -fx-font-family: "Courier New";
+}
+
+/* ── Tooltip ───────────────────────────────────────────────────── */
+.tooltip {
+    -fx-background-color: #0F0F0F;
+    -fx-text-fill: #888888;
+    -fx-font-family: "Courier New";
+    -fx-font-size: 10px;
+    -fx-border-color: #2A2A2A;
+    -fx-border-width: 1px;
+    -fx-background-radius: 0;
+}
