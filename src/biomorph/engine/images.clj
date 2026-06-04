@@ -1,5 +1,5 @@
 (ns biomorph.engine.images
-  (:import [javafx.scene.image Image WritableImage]
+  (:import [javafx.scene.image Image WritableImage PixelFormat]
            [javafx.scene.paint Color]
            [java.io FileInputStream]))
 
@@ -23,13 +23,20 @@
     {:width n :height n :pixels pixels}))
 
 (defn matrix->fx-image
-  [{:keys [width height pixels]}]
+  [{:keys [width height ^ints pixels]}]
   (let [img (WritableImage. width height)
-        pw (.getPixelWriter img)]
-    (dotimes [y height]
-      (dotimes [x width]
-        (let [g (aget pixels (+ (* y width) x))]
-          (.setColor pw x y (Color/gray (double (/ g 255.0)))))))
+        pw  (.getPixelWriter img)
+        n   (* width height)
+        buf (int-array n)]
+    (dotimes [i n]
+      (let [g    (aget pixels i)
+            argb (bit-or (unchecked-int 0xFF000000)
+                         (bit-or (bit-shift-left g 16)
+                                 (bit-or (bit-shift-left g 8) g)))]
+        (aset buf i argb)))
+    (.setPixels pw 0 0 width height
+                (PixelFormat/getIntArgbInstance)
+                buf 0 width)
     img))
 
 (defn genotype->fx-image [genotype]

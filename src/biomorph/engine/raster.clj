@@ -55,15 +55,16 @@
      (when (empty? segs)
        (.setStroke gfx (BasicStroke. 1.0)))
     (.dispose gfx)
-    (let [n width out (int-array (* n height))]
-      (dotimes [y height]
-        (dotimes [x width]
-          (let [rgb (.getRGB img x y)
-                r   (bit-and (bit-shift-right rgb 16) 0xFF)
-                gv  (bit-and (bit-shift-right rgb 8)  0xFF)
-                b   (bit-and rgb 0xFF)
-                lum (int (Math/round (+ (* 0.299 r) (* 0.587 gv) (* 0.114 b))))]
-            (aset out (+ (* y n) x) lum))))
+    (let [total   (* width height)
+          rgb-arr (int-array total)
+          out     (int-array total)]
+      (.getRGB img 0 0 width height rgb-arr 0 width)
+      (dotimes [i total]
+        (let [rgb (aget rgb-arr i)
+              r   (bit-and (bit-shift-right rgb 16) 0xFF)
+              gv  (bit-and (bit-shift-right rgb 8)  0xFF)
+              b   (bit-and rgb 0xFF)]
+          (aset out i (int (Math/round (+ (* 0.299 r) (* 0.587 gv) (* 0.114 b)))))))
       {:width width :height height :pixels out}))))
 
 (defn rasterize-tree
