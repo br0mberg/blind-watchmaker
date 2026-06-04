@@ -1,26 +1,28 @@
 (ns biomorph.engine.core
   (:require [biomorph.state :as state]
-            [biomorph.engine.stub :as stub]
+            [biomorph.engine.real :as real]
             [biomorph.engine.protocols :as p]
             [biomorph.engine.images :as images]
             [cljfx.api :as fx]))
 
-(defonce engine stub/engine)
+(defonce engine real/engine)
 
 (defonce app-state-atom (atom state/initial-state))
 
 (defonce evolution-agent (agent nil))
 
-(defn stub-fitness [genotype]
-  (let [candidate (images/genotype->matrix genotype)]
-    (p/evaluate-similarity engine candidate (:target/matrix @app-state-atom)
-                           (:evolution/metric-type @app-state-atom))))
+(defn- compute-fitness [matrix]
+  (let [target (:target/matrix @app-state-atom)
+        metric (:evolution/metric-type @app-state-atom)]
+    (if target
+      (p/evaluate-similarity engine matrix target metric)
+      0.5)))
 
 (defn- make-biomorph [id genotype]
-  {:id id
-   :genotype genotype
-   :fitness (stub-fitness genotype)
-   :fx-image (images/genotype->fx-image genotype)})
+  (let [tree   (p/draw-phenotype engine genotype)
+        matrix (p/rasterize engine tree 150 150)
+        fx-img (images/matrix->fx-image matrix)]
+    {:id id :genotype genotype :fitness (compute-fitness matrix) :fx-image fx-img}))
 
 (defn seed-initial-population!
   []
@@ -33,11 +35,13 @@
            :population/best-biomorph best)))
 
 (defn- evolve-biomorph [biomorph]
-  (let [genotype (p/mutate-genotype engine (:genotype biomorph))]
+  (let [genotype (p/mutate-genotype engine (:genotype biomorph))
+        tree     (p/draw-phenotype engine genotype)
+        matrix   (p/rasterize engine tree 150 150)]
     (assoc biomorph
            :genotype genotype
-           :fitness (stub-fitness genotype)
-           :fx-image (images/genotype->fx-image genotype))))
+           :fitness  (compute-fitness matrix)
+           :fx-image (images/matrix->fx-image matrix))))
 
 (defn compute-next-generation-loop [_agent-state]
   (let [state @app-state-atom]
