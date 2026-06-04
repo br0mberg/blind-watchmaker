@@ -5,6 +5,10 @@ Telegram: [@devbrombin](https://t.me/devbrombin)
 
 ---
 
+![demo](demo.gif)
+
+---
+
 ## Содержание
 
 - [Обзор](#обзор)
