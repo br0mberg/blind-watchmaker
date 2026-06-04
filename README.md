@@ -1,10 +1,5 @@
 # blind-watchmaker
 
-Email: andrey@brombin.ru
-Telegram: [@devbrombin](https://t.me/devbrombin)
-
----
-
 ![demo](demo.gif)
 
 ---
