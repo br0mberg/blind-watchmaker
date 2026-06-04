@@ -17,8 +17,11 @@
         payload (event-payload event)]
     (if (= event-type :target/load-image)
       (events/load-target-image-async! dispatch-event!)
-      (swap! eng/app-state-atom
-             #(events/handle-event event-type % payload)))))
+      (let [next-state (swap! eng/app-state-atom
+                              #(events/handle-event event-type % payload))]
+        (when (and (= event-type :evolution/toggle-status)
+                   (= :running (:evolution/status next-state)))
+          (send-off eng/evolution-agent eng/compute-next-generation-loop))))))
 
 (def renderer
   (fx/create-renderer

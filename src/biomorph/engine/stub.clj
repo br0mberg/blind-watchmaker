@@ -16,8 +16,13 @@
 
   (mutate-genotype [_ genotype]
     (let [idx (rand-int 16)
-          delta (if (< (rand) 0.5) -1 1)
-          [lo hi] (if (< idx 15) [-9 9] [2 12])]
+          [lo hi] (if (< idx 15) [-9 9] [2 12])
+          value (genotype idx)
+          delta (cond
+                  (= value lo) 1
+                  (= value hi) -1
+                  (< (rand) 0.5) -1
+                  :else 1)]
       (assoc genotype idx (clamp (+ (genotype idx) delta) lo hi))))
 
   (draw-phenotype [_ _genotype]
@@ -28,7 +33,7 @@
   (rasterize [_ _geometry _width _height]
     (images/genotype->matrix (vec (repeatedly 16 #(rand-int 17)))))
 
-  (evaluate-similarity [_ candidate _target _metric-type]
+  (evaluate-similarity [_ candidate _target]
     (+ 0.3 (/ (mod (Math/abs (hash (:pixels candidate))) 700) 1000.0))))
 
 (def engine (->StubEngine))
