@@ -11,6 +11,5 @@
 (defprotocol FitnessEvaluator
   (rasterize [this geometry width height]
     "Растеризация геометрии в матрицу пикселей.")
-  (evaluate-similarity [this candidate-matrix target-matrix metric-type]
-    "Подобие кандидата целевой матрице.
-     metric-type: :euclidean | :manhattan | :normalized-cross-correlation"))
+  (evaluate-similarity [this candidate-matrix target-matrix]
+    "Нормализованная кросс-корреляция кандидата и целевой матрицы."))

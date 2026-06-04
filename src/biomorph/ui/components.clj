@@ -1,8 +1,5 @@
 (ns biomorph.ui.components)
 
-(def metric-items
-  [:euclidean :manhattan :normalized-cross-correlation])
-
 (defn biomorph-cell [{:keys [id genotype fitness fx-image selected?]}]
   {:fx/type :v-box
    :alignment :center
@@ -27,7 +24,7 @@
                :style {:-fx-font-size 10 :-fx-text-fill "#666666"}
                :text (str "G: " (pr-str (vec (take 8 genotype))) "...")}]})
 
-(defn control-panel [{:keys [status generation metric-type stagnation-count]}]
+(defn control-panel [{:keys [status generation stagnation-count]}]
   {:fx/type :v-box
    :spacing 15
    :padding 15
@@ -59,14 +56,6 @@
                            :grid-pane/row 1
                            :text (str stagnation-count)}]}
               {:fx/type :separator}
-              {:fx/type :v-box
-               :spacing 5
-               :children [{:fx/type :label :text "Метрика подобия:"}
-                          {:fx/type :combo-box
-                           :value metric-type
-                           :items metric-items
-                           :on-value-changed {:event/type :evolution/set-metric}}]}
-              {:fx/type :separator}
               {:fx/type :button
                :max-width Double/MAX_VALUE
                :style (case status
@@ -78,12 +67,15 @@
                        :idle "Запустить эволюцию"
                        :paused "Продолжить"
                        :converged "Эволюция завершена (Сходимость)")
-               :on-action {:event/type :evolution/toggle-status}}]})
+               :on-action {:event/type :evolution/toggle-status}}
+              {:fx/type :button
+               :max-width Double/MAX_VALUE
+               :text "Сбросить"
+               :on-action {:event/type :evolution/reset}}]})
 
 (defn main-view [{:keys [state]}]
   (let [{:keys [evolution/status
                 evolution/generation
-                evolution/metric-type
                 evolution/stagnation-counter
                 population/biomorphs
                 ui/selected-biomorph-id
@@ -110,7 +102,6 @@
                     :left (control-panel
                            {:status status
                             :generation generation
-                            :metric-type metric-type
                             :stagnation-count stagnation-counter})
                     :center (if (seq biomorphs)
                               {:fx/type :scroll-pane

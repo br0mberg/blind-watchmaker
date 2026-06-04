@@ -1,6 +1,7 @@
 (ns biomorph.ui.events
   (:require [biomorph.state :as state]
             [biomorph.engine.core :as eng]
+            [biomorph.engine.protocols :as p]
             [biomorph.engine.images :as images]
             [cljfx.api :as fx])
   (:import [javafx.stage FileChooser FileChooser$ExtensionFilter]))
@@ -14,16 +15,32 @@
   (let [status (:evolution/status state)]
     (case status
       :running (assoc state :evolution/status :paused)
-      (do
-        (when (empty? (:population/biomorphs state))
-          (eng/seed-initial-population!))
-        (send-off eng/evolution-agent eng/compute-next-generation-loop)
+      (let [state (if (empty? (:population/biomorphs state))
+                    (let [n (:population/size state)
+                          target (:target/matrix state)
+                          biomorphs (vec (for [id (range n)]
+                                           (eng/make-biomorph
+                                            id
+                                            (p/generate-initial-genotype eng/engine)
+                                            target)))
+                          best (apply max-key :fitness biomorphs)]
+                      (assoc state
+                             :population/biomorphs biomorphs
+                             :population/best-biomorph best))
+                    state)]
         (assoc state :evolution/status :running)))))
 
-(defmethod handle-event :evolution/set-metric [_ state metric-type]
-  (if metric-type
-    (assoc state :evolution/metric-type metric-type)
-    state))
+(defmethod handle-event :evolution/reset [_ state _]
+  (let [n (:population/size state)
+        target (:target/matrix state)
+        biomorphs (vec (for [id (range n)]
+                         (eng/make-biomorph
+                          id
+                          (p/generate-initial-genotype eng/engine)
+                          target)))
+        best (apply max-key :fitness biomorphs)]
+    (state/apply-population-reset state {:biomorphs biomorphs
+                                         :best-biomorph best})))
 
 (defmethod handle-event :ui/select-biomorph [_ state id]
   (assoc state :ui/selected-biomorph-id id))
@@ -32,7 +49,15 @@
   (state/apply-generation-computed state payload))
 
 (defmethod handle-event :target/loaded [_ state payload]
-  (state/apply-target-loaded state payload))
+  (let [next-state (state/apply-target-loaded state payload)
+        biomorphs (:population/biomorphs next-state)]
+    (if (seq biomorphs)
+      (let [rescored (eng/rescore-biomorphs biomorphs (:matrix payload))
+            best (apply max-key :fitness rescored)]
+        (assoc next-state
+               :population/biomorphs rescored
+               :population/best-biomorph best))
+      next-state)))
 
 (defn- show-file-chooser []
   (let [chooser (FileChooser.)

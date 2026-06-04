@@ -4,13 +4,12 @@
   {:evolution/status :idle
    :evolution/generation 0
    :evolution/stagnation-counter 0
-   :evolution/metric-type :euclidean
 
    :target/image-path nil
    :target/matrix nil
    :target/fx-image nil
 
-   :population/size 9
+   :population/size 10
    :population/biomorphs []
    :population/best-biomorph nil
 
@@ -31,3 +30,13 @@
          :target/image-path path
          :target/fx-image fx-image
          :target/matrix matrix))
+
+(defn apply-population-reset
+  [state {:keys [biomorphs best-biomorph]}]
+  (assoc state
+         :evolution/status :idle
+         :evolution/generation 0
+         :evolution/stagnation-counter 0
+         :population/biomorphs biomorphs
+         :population/best-biomorph best-biomorph
+         :ui/selected-biomorph-id nil))
