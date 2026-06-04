@@ -3,6 +3,8 @@
             [biomorph.ui.components :refer [main-view]]
             [biomorph.ui.events :as events]
             [biomorph.engine.core :as eng])
+  (:import [javafx.scene.media Media MediaPlayer]
+           [javafx.application Platform])
   (:gen-class))
 
 (defn- event-payload [event]
@@ -30,6 +32,16 @@
                   {:fx/type main-view :state state}))
    :opts {:fx.opt/map-event-handler dispatch-event!}))
 
+(defn- start-ambient! []
+  (Platform/runLater
+   (fn []
+     (when-let [url (clojure.java.io/resource "ambient.mp3")]
+       (let [player (MediaPlayer. (Media. (str url)))]
+         (.setCycleCount player MediaPlayer/INDEFINITE)
+         (.setVolume player 0.28)
+         (.play player))))))
+
 (defn -main [& _]
   (eng/seed-initial-population!)
-  (fx/mount-renderer eng/app-state-atom renderer))
+  (fx/mount-renderer eng/app-state-atom renderer)
+  (start-ambient!))
