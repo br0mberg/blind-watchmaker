@@ -25,9 +25,9 @@
                :text (str "Fitness: " (format "%.4f" (double fitness)))}
               {:fx/type :label
                :style {:-fx-font-size 10 :-fx-text-fill "#666666"}
-               :text (str "G: " (pr-str (vec (take 8 genotype))) "...")}]})
+               :text (str "G14=" (genotype 14) " · " (pr-str (vec (take 6 genotype))) "…")}]})
 
-(defn control-panel [{:keys [status generation metric-type stagnation-count]}]
+(defn control-panel [{:keys [status generation metric-type stagnation-count gene-14-as-thickness?]}]
   {:fx/type :v-box
    :spacing 15
    :padding 15
@@ -67,6 +67,11 @@
                            :items metric-items
                            :on-value-changed {:event/type :evolution/set-metric}}]}
               {:fx/type :separator}
+              {:fx/type :check-box
+               :text "Ген 14 → толщина линии (иначе смещение dir)"
+               :selected gene-14-as-thickness?
+               :on-action {:event/type :ui/toggle-gene-14-mode}}
+              {:fx/type :separator}
               {:fx/type :button
                :max-width Double/MAX_VALUE
                :style (case status
@@ -87,6 +92,7 @@
                 evolution/stagnation-counter
                 population/biomorphs
                 ui/selected-biomorph-id
+                ui/gene-14-as-thickness?
                 target/fx-image]} state
         pref-cols 3
         target-view (if fx-image
@@ -111,7 +117,8 @@
                            {:status status
                             :generation generation
                             :metric-type metric-type
-                            :stagnation-count stagnation-counter})
+                            :stagnation-count stagnation-counter
+                            :gene-14-as-thickness? gene-14-as-thickness?})
                     :center (if (seq biomorphs)
                               {:fx/type :scroll-pane
                                :fit-to-width true
