@@ -13,7 +13,8 @@
    :population/biomorphs []
    :population/best-biomorph nil
 
-   :ui/selected-biomorph-id nil})
+   :ui/selected-biomorph-id nil
+   :ui/gene-14-as-thickness? false})
 
 (defn apply-generation-computed
   [state {:keys [biomorphs generation stagnation converged? best-biomorph]}]

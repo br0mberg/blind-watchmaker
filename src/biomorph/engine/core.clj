@@ -1,6 +1,7 @@
 (ns biomorph.engine.core
   (:require [biomorph.state :as state]
             [biomorph.engine.real :as real]
+            [biomorph.engine.render :as render]
             [biomorph.engine.protocols :as p]
             [biomorph.engine.images :as images])
   (:import [javafx.application Platform]))
@@ -21,16 +22,36 @@
 
 (defn make-biomorph
   ([id genotype]
-   (make-biomorph id genotype (:target/matrix @app-state-atom)))
+   (let [state @app-state-atom]
+     (make-biomorph id genotype (:target/matrix state)
+                    (:ui/gene-14-as-thickness? state false))))
   ([id genotype target]
-   (let [tree   (p/draw-phenotype engine genotype)
-         matrix (p/rasterize engine tree 150 150)
+   (make-biomorph id genotype target
+                  (:ui/gene-14-as-thickness? @app-state-atom false)))
+  ([id genotype target thickness?]
+   (let [matrix (render/genotype->matrix genotype thickness?)
          fx-img (images/matrix->fx-image matrix)]
      {:id id
       :genotype genotype
       :matrix matrix
       :fitness (compute-fitness matrix target)
       :fx-image fx-img})))
+
+(defn apply-gene-14-mode
+  "Включить режим гена 14 и перерисовать текущую популяцию."
+  [state gene-14-as-thickness?]
+  (let [state (assoc state :ui/gene-14-as-thickness? gene-14-as-thickness?)
+        target (:target/matrix state)]
+    (if (seq (:population/biomorphs state))
+      (let [biomorphs (vec (map-indexed
+                            (fn [id b]
+                              (make-biomorph id (:genotype b) target gene-14-as-thickness?))
+                            (:population/biomorphs state)))
+            best (apply max-key :fitness biomorphs)]
+        (assoc state
+               :population/biomorphs biomorphs
+               :population/best-biomorph best))
+      state)))
 
 (defn reindex-biomorphs [biomorphs]
   (mapv (fn [id biomorph] (assoc biomorph :id id))
@@ -49,24 +70,25 @@
     [(vec (concat (subvec genotype-a 0 8) (subvec genotype-b 8 16)))
      (vec (concat (subvec genotype-b 0 8) (subvec genotype-a 8 16)))]))
 
-(defn child-genotypes [parents]
+(defn child-genotypes [parents thickness?]
   (vec
    (for [i (range (count parents))
          j (range (inc i) (count parents))
          genotype (crossover-genotypes (nth parents i) (nth parents j))]
-     (p/mutate-genotype engine genotype))))
+     (real/mutate-genotype* genotype thickness?))))
 
-(defn next-generation [parents target population-size]
+(defn next-generation [parents target population-size thickness?]
   (let [children (map-indexed (fn [idx genotype]
-                                (make-biomorph (+ population-size idx) genotype target))
-                              (child-genotypes parents))
+                                (make-biomorph (+ population-size idx) genotype target thickness?))
+                              (child-genotypes parents thickness?))
         elite-count 5
         elite (sort-and-trim (into (vec parents) children) elite-count)
         random-biomorphs (vec (for [id (range elite-count population-size)]
                                 (make-biomorph
                                  id
                                  (p/generate-initial-genotype engine)
-                                 target)))]
+                                 target
+                                 thickness?)))]
     (reindex-biomorphs (into elite random-biomorphs))))
 
 (defn rescore-biomorphs [biomorphs target]
@@ -86,29 +108,16 @@
            :population/biomorphs biomorphs
            :population/best-biomorph best)))
 
-(defn reset-population!
-  []
-  (let [n (:population/size @app-state-atom)
-        target (:target/matrix @app-state-atom)
-        biomorphs (vec (for [id (range n)]
-                         (make-biomorph id (p/generate-initial-genotype engine) target)))
-        best (apply max-key :fitness biomorphs)]
-    (swap! app-state-atom assoc
-           :evolution/status :idle
-           :evolution/generation 0
-           :evolution/stagnation-counter 0
-           :population/biomorphs biomorphs
-           :population/best-biomorph best
-           :ui/selected-biomorph-id nil)))
-
 (defn compute-next-generation-loop [_agent-state]
   (let [state @app-state-atom]
     (if (= (:evolution/status state) :running)
       (let [current-gen (:evolution/generation state)
             population-size (:population/size state)
+            thickness? (:ui/gene-14-as-thickness? state false)
             next-biomorphs (next-generation (:population/biomorphs state)
                                             (:target/matrix state)
-                                            population-size)
+                                            population-size
+                                            thickness?)
             best (apply max-key :fitness next-biomorphs)
             current-best-fitness (get-in state [:population/best-biomorph :fitness] 0.0)
             best-fitness (:fitness best)

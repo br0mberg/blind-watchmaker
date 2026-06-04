@@ -45,6 +45,9 @@
 (defmethod handle-event :ui/select-biomorph [_ state id]
   (assoc state :ui/selected-biomorph-id id))
 
+(defmethod handle-event :ui/toggle-gene-14-mode [_ state _]
+  (eng/apply-gene-14-mode state (not (:ui/gene-14-as-thickness? state false))))
+
 (defmethod handle-event :engine/generation-computed [_ state payload]
   (state/apply-generation-computed state payload))
 
