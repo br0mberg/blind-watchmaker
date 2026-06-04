@@ -40,13 +40,12 @@
 (defn apply-gene-14-mode
   "Включить режим гена 14 и перерисовать текущую популяцию."
   [state gene-14-as-thickness?]
-  (let [state (assoc state :ui/gene-14-as-thickness? gene-14-as-thickness?)
+  (let [state  (assoc state :ui/gene-14-as-thickness? gene-14-as-thickness?)
         target (:target/matrix state)]
     (if (seq (:population/biomorphs state))
-      (let [biomorphs (vec (map-indexed
-                            (fn [id b]
-                              (make-biomorph id (:genotype b) target gene-14-as-thickness?))
-                            (:population/biomorphs state)))
+      (let [biomorphs (vec (pmap (fn [b]
+                                   (make-biomorph (:id b) (:genotype b) target gene-14-as-thickness?))
+                                 (:population/biomorphs state)))
             best (apply max-key :fitness biomorphs)]
         (assoc state
                :population/biomorphs biomorphs
@@ -78,32 +77,31 @@
      (real/mutate-genotype* genotype thickness?))))
 
 (defn next-generation [parents target population-size thickness?]
-  (let [children (map-indexed (fn [idx genotype]
-                                (make-biomorph (+ population-size idx) genotype target thickness?))
-                              (child-genotypes parents thickness?))
-        elite-count 5
-        elite (sort-and-trim (into (vec parents) children) elite-count)
-        random-biomorphs (vec (for [id (range elite-count population-size)]
-                                (make-biomorph
-                                 id
-                                 (p/generate-initial-genotype engine)
-                                 target
-                                 thickness?)))]
+  (let [child-genos      (child-genotypes parents thickness?)
+        children         (vec (pmap (fn [[idx genotype]]
+                                      (make-biomorph (+ population-size idx) genotype target thickness?))
+                                    (map-indexed vector child-genos)))
+        elite-count      5
+        elite            (sort-and-trim (into (vec parents) children) elite-count)
+        random-biomorphs (vec (pmap (fn [id]
+                                      (make-biomorph id (p/generate-initial-genotype engine) target thickness?))
+                                    (range elite-count population-size)))]
     (reindex-biomorphs (into elite random-biomorphs))))
 
 (defn rescore-biomorphs [biomorphs target]
   (sort-and-trim
-   (mapv (fn [biomorph]
-           (assoc biomorph :fitness (compute-fitness (:matrix biomorph) target)))
-         biomorphs)
+   (vec (pmap (fn [biomorph]
+                (assoc biomorph :fitness (compute-fitness (:matrix biomorph) target)))
+              biomorphs))
    (count biomorphs)))
 
 (defn seed-initial-population!
   []
-  (let [n (:population/size @app-state-atom)
-        biomorphs (vec (for [id (range n)]
-                         (make-biomorph id (p/generate-initial-genotype engine))))
-        best (apply max-key :fitness biomorphs)]
+  (let [n         (:population/size @app-state-atom)
+        biomorphs (vec (pmap (fn [id]
+                               (make-biomorph id (p/generate-initial-genotype engine)))
+                             (range n)))
+        best      (apply max-key :fitness biomorphs)]
     (swap! app-state-atom assoc
            :population/biomorphs biomorphs
            :population/best-biomorph best)))
