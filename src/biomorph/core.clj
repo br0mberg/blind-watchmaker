@@ -7,6 +7,8 @@
            [javafx.application Platform])
   (:gen-class))
 
+(defonce ^:private ambient-player (atom nil))
+
 (defn- event-payload [event]
   (or (:payload event)
       (when-let [c (:fx/event event)]
@@ -17,8 +19,23 @@
 (defn- dispatch-event! [event]
   (let [event-type (:event/type event)
         payload (event-payload event)]
-    (if (= event-type :target/load-image)
+    (cond
+      (= event-type :target/load-image)
       (events/load-target-image-async! dispatch-event!)
+
+      (= event-type :ui/toggle-audio)
+      (let [next-state (swap! eng/app-state-atom
+                              #(update % :ui/audio-muted? not))]
+        (when-let [player @ambient-player]
+          (.setMute player (:ui/audio-muted? next-state))))
+
+      (= event-type :app/quit)
+      (do (when-let [player @ambient-player]
+            (.stop player))
+          (Platform/exit)
+          (System/exit 0))
+
+      :else
       (let [next-state (swap! eng/app-state-atom
                               #(events/handle-event event-type % payload))]
         (when (and (= event-type :evolution/toggle-status)
@@ -39,7 +56,8 @@
        (let [player (MediaPlayer. (Media. (str url)))]
          (.setCycleCount player MediaPlayer/INDEFINITE)
          (.setVolume player 0.28)
-         (.play player))))))
+         (.play player)
+         (reset! ambient-player player))))))
 
 (defn -main [& _]
   (eng/seed-initial-population!)

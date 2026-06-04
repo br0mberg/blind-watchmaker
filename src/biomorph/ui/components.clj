@@ -37,7 +37,7 @@
                                        "-fx-text-fill: #666655;")
                            :text (str "G14=" (genotype 14) " · " (pr-str (vec (take 6 genotype))) "…")}]}]})
 
-(defn control-panel [{:keys [status generation stagnation-count gene-14-as-thickness?]}]
+(defn control-panel [{:keys [status generation stagnation-count gene-14-as-thickness? audio-muted?]}]
   {:fx/type :v-box
    :spacing 15
    :padding 15
@@ -116,7 +116,17 @@
                            "-fx-border-width: 1;"
                            "-fx-font-family: 'Courier New';")
                :text "Сбросить"
-               :on-action {:event/type :evolution/reset}}]})
+               :on-action {:event/type :evolution/reset}}
+              {:fx/type :button
+               :max-width Double/MAX_VALUE
+               :style (str "-fx-background-color: rgba(10,16,10,0.6);"
+                           "-fx-text-fill: " (if gene-14-as-thickness? "#556655" "#3A4A3A") ";"
+                           "-fx-border-color: rgba(40,55,40,0.4);"
+                           "-fx-border-width: 1;"
+                           "-fx-font-family: 'Courier New';"
+                           "-fx-font-size: 10;")
+               :text (if audio-muted? "♪  выкл" "♪  вкл")
+               :on-action {:event/type :ui/toggle-audio}}]})
 
 (defn main-view [{:keys [state]}]
   (let [{:keys [evolution/status
@@ -127,6 +137,7 @@
                 ui/gene-14-as-thickness?
                 target/fx-image]} state
         pref-cols 3
+        audio-muted? (:ui/audio-muted? state false)
         bg-url   (str (clojure.java.io/resource "hospital_bg_crop.jpg"))
         target-view (if fx-image
                       {:fx/type :image-view
@@ -147,6 +158,7 @@
                                    :text "Нет изображения"}]})]
     {:fx/type :stage
      :showing true
+     :on-close-request {:event/type :app/quit}
      :title "Genetic Biomorph Evolution Simulator (Dawkins Clockmaker Engine)"
      :width 1000
      :height 700
@@ -161,7 +173,8 @@
                            {:status status
                             :generation generation
                             :stagnation-count stagnation-counter
-                            :gene-14-as-thickness? gene-14-as-thickness?})
+                            :gene-14-as-thickness? gene-14-as-thickness?
+                            :audio-muted? audio-muted?})
                     :center (if (seq biomorphs)
                               {:fx/type :scroll-pane
                                :fit-to-width true
